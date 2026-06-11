@@ -26,9 +26,7 @@ const formatTime = (seconds) => {
 async function getsongs(folder) {
     const songsFolder = folder || "songs";
 
-    return songFiles.map((fileName) => {
-        return `${songsFolder}/${encodeURIComponent(fileName)}`;
-    });
+    return songFiles.map((fileName) => new URL(`${songsFolder}/${fileName}`, document.baseURI).href);
 }
 
 // Your real audio engine instance variable
@@ -155,11 +153,13 @@ const playMusic = (trackUrl, playButton) => {
     currentSongIndex = songs.indexOf(trackUrl);
     console.log("🎯 Attempting to play track:", trackUrl);
     currentAudio.src = trackUrl;
+    currentAudio.load();
     currentAudio.play().then(() => {
         updatePlayButtonIcon(playButton);
     })
         .catch(err => {
             console.error("Playback error:", err);
+            document.querySelector(".songtime").textContent = "Playback failed";
         });
 
     let Musicname = trackUrl.split("/").pop();
@@ -186,6 +186,11 @@ async function main() {
 
     currentAudio.addEventListener("play", () => updatePlayButtonIcon(playButton));
     currentAudio.addEventListener("pause", () => updatePlayButtonIcon(playButton));
+    currentAudio.addEventListener("error", () => {
+        console.error("Audio file failed to load:", currentAudio.src, currentAudio.error);
+        document.querySelector(".songtime").textContent = "Audio file failed";
+        updatePlayButtonIcon(playButton);
+    });
     currentAudio.addEventListener("ended", () => {
         if (songs.length > 0) {
             const nextIndex = currentSongIndex === -1 ? 0 : (currentSongIndex + 1) % songs.length;
