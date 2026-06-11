@@ -1,5 +1,16 @@
 let songs = [];
 let currentSongIndex = -1;
+
+const songFiles = [
+    "bargad(KoshalWorld.Com) - Copy.mp3",
+    "Departure Lane(KoshalWorld.Com) - Copy.mp3",
+    "Dil Mein Ho Tum Why Cheat India 320 Kbps - Copy.mp3",
+    "Escobar Paisa (PenduJatt.Com.Se).mp3",
+    "Gehra Hua Dhurandhar 320 Kbps - Copy.mp3",
+    "Husn Anuv Jain 320 Kbps - Copy.mp3",
+    "Tum Se Hi Jab We Met 320 Kbps - Copy.mp3"
+];
+
 const formatTime = (seconds) => {
     if (isNaN(seconds) || seconds < 0) return "00:00";
 
@@ -13,34 +24,11 @@ const formatTime = (seconds) => {
 };
 
 async function getsongs(folder) {
-    try {
-        const response = await fetch("songs/");
-        const html = await response.text();
+    const songsFolder = folder || "songs";
 
-        const div = document.createElement("div");
-        div.innerHTML = html;
-
-        const links = div.getElementsByTagName("a");
-        const songs = [];
-
-        for (const link of links) {
-            let href = link.getAttribute("href");
-
-            if (href && href.toLowerCase().endsWith(".mp3")) {
-                let decodedHref = decodeURIComponent(href);
-                decodedHref = decodedHref.replace(/\\/g, "/");
-                const fileName = decodedHref.split("/").pop();
-                const cleanUrl = `${window.location.origin}/songs/${encodeURIComponent(fileName)}`;
-                songs.push(cleanUrl);
-            }
-        }
-
-        console.log("Parsed clean song array:", songs);
-        return songs;
-    } catch (err) {
-        console.error("Could not load songs directory:", err);
-        return [];
-    }
+    return songFiles.map((fileName) => {
+        return `${songsFolder}/${encodeURIComponent(fileName)}`;
+    });
 }
 
 // Your real audio engine instance variable
@@ -186,7 +174,7 @@ async function main() {
     const cardContainer = document.querySelector(".cardContainer");
     const playButton = document.querySelector("#play");
     const previousButton = document.querySelector("#previous");
-    const nextButton = document.querySelector("#next");
+    const nextButton = document.querySelector("#nextt");
     const menuButton = document.querySelector(".hamburgger");
     const leftPanel = document.querySelector(".left");
     songs = [];
@@ -343,10 +331,14 @@ async function main() {
             playMusic(songs[nextIndex], playButton);
         });
     }
-    document.querySelector(".range").getElementsByTagName("input"), addEventListener("change", (e) => {
-        console.log(e, e.target, e.target.value)
-        currentAudio.volume = parseInt(e.target.value) / 100
-    })
+    const volumeInput = document.querySelector(".range input");
+
+    if (volumeInput) {
+        volumeInput.value = currentAudio.volume * 100;
+        volumeInput.addEventListener("input", (e) => {
+            currentAudio.volume = parseInt(e.target.value, 10) / 100;
+        });
+    }
 }
 
 main();
