@@ -1,5 +1,6 @@
 let songs = [];
 let currentSongIndex = -1;
+let playRequestId = 0;
 
 const songFiles = [
     "bargad(KoshalWorld.Com) - Copy.mp3",
@@ -150,14 +151,23 @@ const updatePlayButtonIcon = (playButton) => {
 const playMusic = (trackUrl, playButton) => {
     if (!trackUrl) return;
 
+    const requestId = ++playRequestId;
     currentSongIndex = songs.indexOf(trackUrl);
     console.log("🎯 Attempting to play track:", trackUrl);
-    currentAudio.src = trackUrl;
-    currentAudio.load();
+    if (currentAudio.src !== trackUrl) {
+        currentAudio.src = trackUrl;
+    } else {
+        currentAudio.currentTime = 0;
+    }
+
     currentAudio.play().then(() => {
-        updatePlayButtonIcon(playButton);
+        if (requestId === playRequestId) {
+            updatePlayButtonIcon(playButton);
+        }
     })
         .catch(err => {
+            if (err.name === "AbortError" || requestId !== playRequestId) return;
+
             console.error("Playback error:", err);
             document.querySelector(".songtime").textContent = "Playback failed";
         });
@@ -230,8 +240,13 @@ async function main() {
         }
 
         if (currentAudio.paused) {
-            currentAudio.play().catch(err => console.error("Playback error: ", err));
+            currentAudio.play().catch(err => {
+                if (err.name !== "AbortError") {
+                    console.error("Playback error: ", err);
+                }
+            });
         } else {
+            playRequestId++;
             currentAudio.pause();
         }
     });
